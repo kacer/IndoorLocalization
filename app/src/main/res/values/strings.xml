@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">IndoorLocalization</string>
+    <string name="error_invalid_mac">Invalid MAC address!</string>
 </resources>
