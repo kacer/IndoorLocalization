@@ -15,7 +15,7 @@ import cz.marw.indoorlocalization.managers.BluetoothManager;
 public class MainActivity extends AppCompatActivity {
 
     private EditText etMacAddr;
-    private Button btnConnect;
+    private Button btnConnect, btnScan;
 
     private BluetoothManager bluetoothManager;
 
@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         etMacAddr = (EditText) findViewById(R.id.macAddr);
         btnConnect = (Button) findViewById(R.id.connect);
+        btnScan = (Button) findViewById(R.id.btnScan);
 
         etMacAddr.setText(BluetoothManager.SENSOR_TAG_MAC);
 
@@ -45,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 bluetoothManager.connectToDevice(MainActivity.this, mac);
+            }
+        });
+
+        btnScan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                bluetoothManager.startScan(5000);
             }
         });
     }
