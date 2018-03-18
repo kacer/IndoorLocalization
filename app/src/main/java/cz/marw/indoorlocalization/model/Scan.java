@@ -13,16 +13,6 @@ public class Scan {
     private byte flag;
     private List<RadioPrint> prints = new ArrayList<>();
 
-    public Scan(int ageOfScan, byte flag) {
-        this.ageOfScan = ageOfScan;
-        this.flag = flag;
-    }
-
-    public Scan(int ageOfScan, byte flag, List<RadioPrint> prints) {
-        this(ageOfScan, flag);
-        this.prints = prints;
-    }
-
     public void addRadioPrint(String macAddr, int rssi, int discoveryTime) {
         prints.add(new RadioPrint(macAddr, rssi, discoveryTime));
     }
