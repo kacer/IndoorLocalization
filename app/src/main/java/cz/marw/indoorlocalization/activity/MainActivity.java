@@ -14,7 +14,7 @@ import cz.marw.indoorlocalization.managers.BluetoothManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    private EditText etMacAddr;
+    private EditText etMacAddr, etScanDuration;
     private Button btnConnect, btnScan;
 
     private BluetoothManager bluetoothManager;
@@ -23,8 +23,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        etMacAddr = (EditText) findViewById(R.id.macAddr);
-        btnConnect = (Button) findViewById(R.id.connect);
+        etMacAddr = (EditText) findViewById(R.id.etMacAddr);
+        etScanDuration = (EditText) findViewById(R.id.etScanDuration);
+        btnConnect = (Button) findViewById(R.id.btnConnect);
         btnScan = (Button) findViewById(R.id.btnScan);
 
         etMacAddr.setText(BluetoothManager.SENSOR_TAG_MAC);
@@ -52,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                bluetoothManager.startScan(5000);
+                int scanDuration = Integer.valueOf(etScanDuration.getText().toString());
+
+                bluetoothManager.startScan(scanDuration);
             }
         });
     }
