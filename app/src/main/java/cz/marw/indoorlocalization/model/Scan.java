@@ -17,6 +17,10 @@ public class Scan {
         prints.add(new RadioPrint(macAddr, rssi, discoveryTime));
     }
 
+    public void addRadioPrint(RadioPrint radioPrint) {
+        prints.add(radioPrint);
+    }
+
     public int getTotalCount() {
         return prints.size();
     }

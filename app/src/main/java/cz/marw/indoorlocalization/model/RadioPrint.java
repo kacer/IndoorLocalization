@@ -16,6 +16,8 @@ public class RadioPrint {
         this.discoveryTime = discoveryTime;
     }
 
+    public RadioPrint() {}
+
     public int getRssi() {
         return rssi;
     }
