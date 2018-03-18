@@ -29,4 +29,21 @@ public class ByteConverter {
         return bytes;
     }
 
+    public static int bytesToInt(byte[] bytes, int formatType) {
+        int value = 0;
+
+        switch(formatType) {
+            case FORMAT_UINT8:
+                value = bytes[0];
+                break;
+            case FORMAT_UINT16:
+                value = (bytes[0] << 8) + bytes[1];
+                break;
+            case FORMAT_UINT32:
+                break;
+        }
+
+        return value;
+    }
+
 }
