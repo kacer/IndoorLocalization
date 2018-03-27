@@ -5,22 +5,20 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import cz.marw.indoorlocalization.characteristicoperations.CharacteristicOperation;
+import cz.marw.indoorlocalization.characteristicoperations.ReadOperation;
+import cz.marw.indoorlocalization.characteristicoperations.WriteOperation;
 import cz.marw.indoorlocalization.model.RadioPrint;
 import cz.marw.indoorlocalization.model.Scan;
-import cz.marw.indoorlocalization.tools.ByteConverter;
-//import android.bluetooth.BluetoothManager;
+import cz.marw.indoorlocalization.tools.MacAddress;
 
 /**
  * Created by Martinek on 13. 3. 2018.
@@ -42,15 +40,15 @@ public class BluetoothManager {
     public static final String BEACONS_LIST_FLAG_OF_MAC_UUID = "f000b600-0451-4000-b000-000000000000";
     public static final String BEACONS_LIST_AGE_OF_SCAN_UUID = "f000b700-0451-4000-b000-000000000000";
 
-    private static final int SCANNING_DURATION_DELAY = 200;
+    private static final int SCANNING_DURATION_DELAY = 100;
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothGatt deviceGatt;
     private Scan scan;
     private RadioPrint actualRadioPrint;
+    private int totalDesiredCount;
     private Timer scanningTime = new Timer();
-    private int scanDuration;
-    private Queue<BluetoothGattCharacteristic> fifoOfChars = new LinkedList<>();
+    private Queue<CharacteristicOperation> fifoOfChars = new LinkedList<>();
 
     public BluetoothManager(android.bluetooth.BluetoothManager manager) {
         bluetoothAdapter = manager.getAdapter();
@@ -78,11 +76,11 @@ public class BluetoothManager {
 
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                //Nastavit si casovac na scan duration + 200ms
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case START_SCAN_CHAR_UUID:
-                            int scanDuration = ByteConverter.bytesToInt(characteristic.getValue(), ByteConverter.FORMAT_UINT16);
+                            int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                            System.out.println("SCAN DURATION onWrite: " + scanDuration);
                             scanningTime.schedule(new TimerTask() {
                                 @Override
                                 public void run() {
@@ -105,35 +103,35 @@ public class BluetoothManager {
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case BEACONS_LIST_TOTAL_COUNT_UUID:
-                            int totalCount = ByteConverter.bytesToInt(characteristic.getValue(), ByteConverter.FORMAT_UINT16);
-                            System.out.println("Total count: " + totalCount);
-                            readRadioPrintsFromSensorTag(totalCount);
+                            totalDesiredCount = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                            System.out.println("Total count: " + totalDesiredCount);
+                            readRadioPrintsFromSensorTag();
                             break;
                         case BEACONS_LIST_MAC_ADDR_UUID:
                             actualRadioPrint = new RadioPrint();
-                            actualRadioPrint.setMacAddr(characteristic.getStringValue(0));
+                            actualRadioPrint.setMacAddr(MacAddress.macAsString(characteristic.getValue()));
                             break;
                         case BEACONS_LIST_RSSI_UUID:
-                            actualRadioPrint.setRssi(-1 * characteristic.getValue()[0]);
+                            actualRadioPrint.setRssi(-1 * characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
                             break;
                         case BEACONS_LIST_AGE_UUID:
-                            int age = ByteConverter.bytesToInt(characteristic.getValue(), ByteConverter.FORMAT_UINT16);
+                            int age = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             actualRadioPrint.setDiscoveryTime(age);
                             scan.addRadioPrint(actualRadioPrint);
                             break;
                         case BEACONS_LIST_FLAG_OF_MAC_UUID:
-                            System.out.println("Flag Of MAC: " + ByteConverter.bytesToInt(characteristic.getValue(), ByteConverter.FORMAT_UINT8));
+                            System.out.println("Flag Of MAC: " + characteristic.getValue()[0]);
                             scan.setFlag(characteristic.getValue()[0]);
                             break;
                         case BEACONS_LIST_AGE_OF_SCAN_UUID:
-                            int ageOfScan = ByteConverter.bytesToInt(characteristic.getValue(), ByteConverter.FORMAT_UINT16);
+                            int ageOfScan = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             System.out.println("Age Of Scan: " + ageOfScan);
                             scan.setAgeOfScan(ageOfScan);
                             break;
                     }
                 }
 
-                if(fifoOfChars.isEmpty()) {
+                if(totalDesiredCount == scan.getTotalCount()) {
                     System.out.println("--- DISCOVERY COMPLETED ---");
                     System.out.println("Age of Scan: " + scan.getAgeOfScan() + " Total count of radio prints: " + scan.getTotalCount() + " Flag of more devices were discovered: " + scan.getFlag());
                     System.out.println();
@@ -148,10 +146,8 @@ public class BluetoothManager {
 
     public boolean startScan(int scanDuration) {
         BluetoothGattCharacteristic startScanCharacteristic = getCharacteristic(START_SCAN_CHAR_UUID);
-        startScanCharacteristic.setValue(ByteConverter.intToBytes(scanDuration, ByteConverter.FORMAT_UINT16));
-        this.scanDuration = scanDuration;
 
-        return deviceGatt.writeCharacteristic(startScanCharacteristic);
+        return new WriteOperation(startScanCharacteristic, scanDuration).execute(deviceGatt);
     }
 
     private void readDataFromSensorTag() {
@@ -159,38 +155,31 @@ public class BluetoothManager {
 
         deviceGatt.readCharacteristic(getCharacteristic(BEACONS_LIST_AGE_OF_SCAN_UUID));
 
-        fifoOfChars.add(getCharacteristic(BEACONS_LIST_TOTAL_COUNT_UUID));
-        fifoOfChars.add(getCharacteristic(BEACONS_LIST_FLAG_OF_MAC_UUID));
+        fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_TOTAL_COUNT_UUID)));
+        fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_FLAG_OF_MAC_UUID)));
     }
 
     private void fetchNextCharacteristic() {
         if(fifoOfChars.isEmpty())
             return;
 
-        BluetoothGattCharacteristic nextChar = fifoOfChars.remove();
+        CharacteristicOperation nextChar = fifoOfChars.remove();
 
-        if(nextChar.getUuid().toString().equals(BEACONS_LIST_GET_RECORD_UUID)) {
-            deviceGatt.writeCharacteristic(nextChar);
-
-            return;
-        }
-
-        deviceGatt.readCharacteristic(nextChar);
+        nextChar.execute(deviceGatt);
     }
 
-    private void readRadioPrintsFromSensorTag(int totalCount) {
-        fifoOfChars.add(getCharacteristic(BEACONS_LIST_MAC_ADDR_UUID));
-        fifoOfChars.add(getCharacteristic(BEACONS_LIST_RSSI_UUID));
-        fifoOfChars.add(getCharacteristic(BEACONS_LIST_AGE_UUID));
+    private void readRadioPrintsFromSensorTag() {
+        fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_MAC_ADDR_UUID)));
+        fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_RSSI_UUID)));
+        fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_AGE_UUID)));
 
-        for(int i = 1; i < totalCount; i++) {
+        for(int i = 1; i < totalDesiredCount; i++) {
             BluetoothGattCharacteristic getRecordChar = getCharacteristic(BEACONS_LIST_GET_RECORD_UUID);
-            getRecordChar.setValue(ByteConverter.intToBytes(i, ByteConverter.FORMAT_UINT16));
 
-            fifoOfChars.add(getRecordChar);
-            fifoOfChars.add(getCharacteristic(BEACONS_LIST_MAC_ADDR_UUID));
-            fifoOfChars.add(getCharacteristic(BEACONS_LIST_RSSI_UUID));
-            fifoOfChars.add(getCharacteristic(BEACONS_LIST_AGE_UUID));
+            fifoOfChars.add(new WriteOperation(getRecordChar, i));
+            fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_MAC_ADDR_UUID)));
+            fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_RSSI_UUID)));
+            fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_AGE_UUID)));
         }
     }
 
