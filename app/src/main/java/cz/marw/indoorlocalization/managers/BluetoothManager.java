@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
+import android.support.annotation.Nullable;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -14,6 +15,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 import cz.marw.indoorlocalization.characteristicoperations.CharacteristicOperation;
+import cz.marw.indoorlocalization.characteristicoperations.EndOperation;
 import cz.marw.indoorlocalization.characteristicoperations.ReadOperation;
 import cz.marw.indoorlocalization.characteristicoperations.WriteOperation;
 import cz.marw.indoorlocalization.model.RadioPrint;
@@ -49,9 +51,11 @@ public class BluetoothManager {
     private int totalDesiredCount;
     private Timer scanningTime = new Timer();
     private Queue<CharacteristicOperation> fifoOfChars = new LinkedList<>();
+    private DataExportManager exporter;
 
     public BluetoothManager(android.bluetooth.BluetoothManager manager) {
         bluetoothAdapter = manager.getAdapter();
+        exporter = new DataExportManager();
     }
 
     public boolean isBluetoothActive() {
@@ -98,8 +102,6 @@ public class BluetoothManager {
 
             @Override
             public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                fetchNextCharacteristic();
-
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case BEACONS_LIST_TOTAL_COUNT_UUID:
@@ -131,15 +133,7 @@ public class BluetoothManager {
                     }
                 }
 
-                if(totalDesiredCount == scan.getTotalCount()) {
-                    System.out.println("--- DISCOVERY COMPLETED ---");
-                    System.out.println("Age of Scan: " + scan.getAgeOfScan() + " Total count of radio prints: " + scan.getTotalCount() + " Flag of more devices were discovered: " + scan.getFlag());
-                    System.out.println();
-                    System.out.println("******* RADIO PRINTS *******");
-                    for(RadioPrint p : scan.getPrints()) {
-                        System.out.println("MAC: " + p.getMacAddr() + " RSSI: " + p.getRssi() + " Discovery time: " + p.getDiscoveryTime());
-                    }
-                }
+                fetchNextCharacteristic();
             }
         });
     }
@@ -181,6 +175,8 @@ public class BluetoothManager {
             fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_RSSI_UUID)));
             fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_AGE_UUID)));
         }
+
+        fifoOfChars.add(new EndOperation(exporter, scan));
     }
 
     private BluetoothGattCharacteristic getCharacteristic(String uuid) {
