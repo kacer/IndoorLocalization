@@ -52,6 +52,7 @@ public class BluetoothManager {
     private Timer scanningTime = new Timer();
     private Queue<CharacteristicOperation> fifoOfChars = new LinkedList<>();
     private DataExportManager exporter;
+    private boolean scanningStart = false;
 
     public BluetoothManager(android.bluetooth.BluetoothManager manager) {
         bluetoothAdapter = manager.getAdapter();
@@ -76,6 +77,8 @@ public class BluetoothManager {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 //Umoznit start scan
+                if(scanningStart)
+                    readDataFromSensorTag();
             }
 
             @Override
@@ -83,13 +86,16 @@ public class BluetoothManager {
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case START_SCAN_CHAR_UUID:
+                            deviceGatt.disconnect();
+                            scanningStart = true;
                             int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             System.out.println("SCAN DURATION onWrite: " + scanDuration);
                             scanningTime.schedule(new TimerTask() {
                                 @Override
                                 public void run() {
                                     System.out.println("SKEN SKONČIL");
-                                    readDataFromSensorTag();
+                                    deviceGatt.connect();
+                                    //readDataFromSensorTag();
                                 }
                             }, scanDuration + SCANNING_DURATION_DELAY);
                             break;
@@ -146,6 +152,7 @@ public class BluetoothManager {
 
     private void readDataFromSensorTag() {
         scan = new Scan();
+        scanningStart = false;
 
         deviceGatt.readCharacteristic(getCharacteristic(BEACONS_LIST_AGE_OF_SCAN_UUID));
 
