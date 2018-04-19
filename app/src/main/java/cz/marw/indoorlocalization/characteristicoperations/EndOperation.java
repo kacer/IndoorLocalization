@@ -2,6 +2,8 @@ package cz.marw.indoorlocalization.characteristicoperations;
 
 import android.bluetooth.BluetoothGatt;
 
+import java.io.File;
+
 import cz.marw.indoorlocalization.managers.callbacks.BluetoothManagerCallback;
 import cz.marw.indoorlocalization.managers.DataExportManager;
 import cz.marw.indoorlocalization.model.Scan;
@@ -25,8 +27,8 @@ public class EndOperation implements CharacteristicOperation {
     @Override
     public boolean execute(BluetoothGatt gatt) {
         cb.onRadioPrintsRead();
-        exporter.exportData(scan);
-        cb.onRadioPrintsExported();
+        File file = exporter.exportData(scan);
+        cb.onRadioPrintsExported(file);
         return true;
     }
 }

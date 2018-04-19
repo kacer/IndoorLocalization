@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">IndoorLocalization</string>
     <string name="error_invalid_mac">Invalid MAC address!</string>
+    <string name="error_parse_scan_duration">If you want to start scanning you have to set scan duration greater than 0!</string>
+    <string name="error_set_permission_to_storage">If you want to start scanning you have to allow permission to storage!</string>
+    <string name="error_scan_was_not_exported">Actual scan results wasn\'t exported!</string>
 </resources>

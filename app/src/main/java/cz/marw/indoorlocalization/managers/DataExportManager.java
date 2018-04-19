@@ -30,14 +30,14 @@ public class DataExportManager {
         dataDir = new File(externalStorageDir.getAbsolutePath(), BASE_DIR_NAME);
     }
 
-    public void exportData(Scan scan) {
-        if(!checkStorage()) {
+    public File exportData(Scan scan) {
+        File outputFile = new File(dataDir, getFilename());
 
-            return;
-        }
+        if(!checkStorage())
+            return outputFile;
 
         try {
-            FileWriter writer = new FileWriter(new File(dataDir, getFilename()));
+            FileWriter writer = new FileWriter(outputFile);
 
             JSONObject scanJson = new JSONObject();
             JSONArray radioPrints = new JSONArray();
@@ -69,7 +69,7 @@ public class DataExportManager {
             e.printStackTrace();
         }
 
-
+        return outputFile;
     }
 
     private boolean checkStorage() {

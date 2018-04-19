@@ -189,6 +189,9 @@ public class BluetoothManager {
     }
 
     public boolean startScan(int scanDuration) {
+        if(scanDuration == 0)
+            return false;
+
         BluetoothGattCharacteristic startScanCharacteristic = getCharacteristic(START_SCAN_CHAR_UUID);
 
         return new WriteOperation(startScanCharacteristic, scanDuration).execute(deviceGatt);
