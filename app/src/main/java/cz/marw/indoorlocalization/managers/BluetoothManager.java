@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.os.Build;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
@@ -100,10 +101,12 @@ public class BluetoothManager {
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case START_SCAN_CHAR_UUID:
+                            scan = new Scan();
                             deviceGatt.disconnect();
                             activityCallback.onScanningStarted();
                             scanningStart = true;
                             int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                            scan.setScanDuration(scanDuration);
                             System.out.println("SCAN DURATION onWrite: " + scanDuration);
                             scanningTime.schedule(new TimerTask() {
                                 @Override
@@ -192,7 +195,6 @@ public class BluetoothManager {
     }
 
     private void readDataFromSensorTag() {
-        scan = new Scan();
         scanningStart = false;
 
         deviceGatt.readCharacteristic(getCharacteristic(BEACONS_LIST_AGE_OF_SCAN_UUID));

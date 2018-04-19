@@ -45,6 +45,8 @@ public class DataExportManager {
             scanJson.put("ageOfScan", scan.getAgeOfScan());
             scanJson.put("flag", scan.getFlag());
             scanJson.put("totalCount", scan.getTotalCount());
+            scanJson.put("scanDuration", scan.getScanDuration());
+            scanJson.put("startOfScan", scan.getFormattedStartOfScan("dd-MM-yyyy HH:mm:ss.SSS"));
 
             for(RadioPrint rp : scan.getPrints()) {
                 JSONObject radioPrint = new JSONObject();
