@@ -14,9 +14,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import cz.marw.indoorlocalization.R;
 import cz.marw.indoorlocalization.managers.callbacks.BluetoothManagerCallback;
@@ -26,8 +30,17 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUESTCODE_STORAGE_PERMISSION = 1;
 
+    private static final int BUTTON = 0;
+    private static final int TEXT_VIEW = 1;
+
+    private static final int LOADING_SCREEN_FADE_OUT_DURATION = 2000;
+
     private EditText etMacAddr, etScanDuration;
     private Button btnConnect, btnScan;
+    private FrameLayout loadingScreen;
+    private TextView tvLoadingState;
+
+    private Timer loadingScreenFadeOut;
 
     private BluetoothManager bluetoothManager;
 
@@ -39,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
         etScanDuration = (EditText) findViewById(R.id.etScanDuration);
         btnConnect = (Button) findViewById(R.id.btnConnect);
         btnScan = (Button) findViewById(R.id.btnScan);
+        loadingScreen = (FrameLayout) findViewById(R.id.loading_screen);
+        tvLoadingState = (TextView) findViewById(R.id.tvLoadingState);
+
+        loadingScreenFadeOut = new Timer();
 
         etMacAddr.setText(BluetoothManager.SENSOR_TAG_MAC);
 
@@ -50,17 +67,18 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onScanningStarted() {
-
+                setVisibilityToLoadingScreen(View.VISIBLE);
+                setText(tvLoadingState, getString(R.string.info_scanning_started), TEXT_VIEW);
             }
 
             @Override
             public void onScanningEnded() {
-
+                setText(tvLoadingState, getString(R.string.info_scanning_stopped), TEXT_VIEW);
             }
 
             @Override
             public void onRadioPrintsRead() {
-
+                setText(tvLoadingState, getString(R.string.info_reading_data), TEXT_VIEW);
             }
 
             @Override
@@ -70,7 +88,15 @@ public class MainActivity extends AppCompatActivity {
                     Uri contentUri = Uri.fromFile(file);
                     mediaScanIntent.setData(contentUri);
                     sendBroadcast(mediaScanIntent);
+                    setText(tvLoadingState, getString(R.string.info_data_exported), TEXT_VIEW);
+                    loadingScreenFadeOut.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            setVisibilityToLoadingScreen(View.GONE);
+                        }
+                    }, LOADING_SCREEN_FADE_OUT_DURATION);
                 } else {
+                    setVisibilityToLoadingScreen(View.GONE);
                     Toast.makeText(MainActivity.this, getString(R.string.error_scan_was_not_exported), Toast.LENGTH_LONG).show();
                 }
             }
@@ -133,6 +159,31 @@ public class MainActivity extends AppCompatActivity {
         }
 
         bluetoothManager.startScan(scanDuration);
+    }
+
+    private void setVisibilityToLoadingScreen(final int visibility) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loadingScreen.setVisibility(visibility);
+            }
+        });
+    }
+
+    private void setText(final Object comp, final String value, final int type){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch(type){
+                    case BUTTON:
+                        ((Button) comp).setText(value);
+                        break;
+                    case TEXT_VIEW:
+                        ((TextView) comp).setText(value);
+                        break;
+                }
+            }
+        });
     }
 
     private void setListeners() {

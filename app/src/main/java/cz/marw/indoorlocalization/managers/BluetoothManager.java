@@ -200,6 +200,7 @@ public class BluetoothManager {
     private void readDataFromSensorTag() {
         scanningStart = false;
 
+        activityCallback.onRadioPrintsRead();
         deviceGatt.readCharacteristic(getCharacteristic(BEACONS_LIST_AGE_OF_SCAN_UUID));
 
         fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_TOTAL_COUNT_UUID)));

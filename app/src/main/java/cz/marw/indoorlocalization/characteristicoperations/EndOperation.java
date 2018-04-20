@@ -26,7 +26,6 @@ public class EndOperation implements CharacteristicOperation {
 
     @Override
     public boolean execute(BluetoothGatt gatt) {
-        cb.onRadioPrintsRead();
         File file = exporter.exportData(scan);
         cb.onRadioPrintsExported(file);
         return true;
