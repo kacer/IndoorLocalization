@@ -20,6 +20,6 @@ public interface BluetoothManagerCallback {
 
     public void onRadioPrintsExported(File file);
 
-    public void onErrorOccured();
+    public void onErrorOccurred();
 
 }

@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout loadingScreen;
     private TextView tvLoadingState, tvConnectionState;
 
-    private AlertDialog errorHasOccuredDialog;
+    private AlertDialog errorHasOccurredDialog;
 
     private BluetoothManager bluetoothManager;
 
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onErrorOccured() {
+            public void onErrorOccurred() {
                 setTextToComponent(tvLoadingState, getString(R.string.error_occurred));
                 Timer fadeOut = new Timer();
                 fadeOut.schedule(new TimerTask() {
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                errorHasOccuredDialog.show();
+                                errorHasOccurredDialog.show();
                             }
                         });
                     }
@@ -284,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        errorHasOccuredDialog = builder.create();
+        errorHasOccurredDialog = builder.create();
     }
 
     private void setGuiToDefault() {

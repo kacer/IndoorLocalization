@@ -83,7 +83,7 @@ public class BluetoothManager {
                     if(!scanningStarted && newState == BluetoothGatt.STATE_DISCONNECTED)
                         deviceGatt.close();
                 } else {
-                    activityCallback.onErrorOccured();
+                    activityCallback.onErrorOccurred();
                 }
             }
 
@@ -97,7 +97,7 @@ public class BluetoothManager {
 
                     activityCallback.onServiceDiscovered();
                 } else {
-                    activityCallback.onErrorOccured();
+                    activityCallback.onErrorOccurred();
                 }
             }
 
@@ -113,7 +113,7 @@ public class BluetoothManager {
                             scanningStarted = true;
                             int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             scan.setScanDuration(scanDuration);
-                            System.out.println("SCAN DURATION onWrite: " + scanDuration);
+
                             //When scanning ends, smartphone will reconnect
                             scanningTime.schedule(new TimerTask() {
                                 @Override
@@ -121,7 +121,7 @@ public class BluetoothManager {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                         deviceGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
                                     }
-                                    System.out.println("SKEN SKONČIL");
+
                                     activityCallback.onScanningEnded();
                                     deviceGatt.connect();
                                 }
@@ -133,7 +133,7 @@ public class BluetoothManager {
                             break;
                     }
                 } else {
-                    activityCallback.onErrorOccured();
+                    activityCallback.onErrorOccurred();
                 }
             }
 
@@ -143,37 +143,32 @@ public class BluetoothManager {
                     switch(characteristic.getUuid().toString()) {
                         case BEACONS_LIST_TOTAL_COUNT_UUID:
                             int totalCount = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                            System.out.println("Total count: " + totalCount);
+
                             //Now is possible to start reading radio prints from Sensor Tag
                             readRadioPrintsFromSensorTag(totalCount);
                             break;
                         case BEACONS_LIST_MAC_ADDR_UUID:
                             actualRadioPrint = new RadioPrint();
                             actualRadioPrint.setMacAddr(MacAddress.macAsString(characteristic.getValue()));
-                            System.out.println("MAC " + scan.getTotalCount());
                             break;
                         case BEACONS_LIST_RSSI_UUID:
                             actualRadioPrint.setRssi(-1 * characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0));
-                            System.out.println("RSSI " + scan.getTotalCount());
                             break;
                         case BEACONS_LIST_AGE_UUID:
                             int age = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             actualRadioPrint.setDiscoveryTime(age);
                             scan.addRadioPrint(actualRadioPrint);
-                            System.out.println("AGE " + scan.getTotalCount());
                             break;
                         case BEACONS_LIST_FLAG_OF_MAC_UUID:
-                            System.out.println("Flag Of MAC: " + characteristic.getValue()[0]);
                             scan.setFlag(characteristic.getValue()[0]);
                             break;
                         case BEACONS_LIST_AGE_OF_SCAN_UUID:
                             int ageOfScan = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
-                            System.out.println("Age Of Scan: " + ageOfScan);
                             scan.setAgeOfScan(ageOfScan);
                             break;
                     }
                 } else {
-                    activityCallback.onErrorOccured();
+                    activityCallback.onErrorOccurred();
                 }
 
                 //After every read or write operation is needed to fetch next characteristic operation
