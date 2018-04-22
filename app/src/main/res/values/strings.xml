@@ -8,4 +8,9 @@
     <string name="info_scanning_stopped">Sensor Tag has stopped the scanning</string>
     <string name="info_reading_data">Reading data from Sensor Tag</string>
     <string name="info_data_exported">Radio prints have been exported</string>
+    <string name="btn_disconnect">disconnect</string>
+    <string name="btn_connect">connect</string>
+    <string name="conn_state_disconnected">disconnected</string>
+    <string name="conn_state_connected">connected</string>
+    <string name="conn_state_connecting">connecting</string>
 </resources>

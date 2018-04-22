@@ -8,7 +8,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.os.Build;
 
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
@@ -48,17 +47,19 @@ public class BluetoothManager {
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothGatt deviceGatt;
+    private int connectionState;
     private Scan scan;
     private RadioPrint actualRadioPrint;
     private Timer scanningTime = new Timer();
     private Queue<CharacteristicOperation> fifoOfChars = new LinkedList<>();
     private DataExportManager exporter;
-    private boolean scanningStart = false;
+    private boolean scanningStarted = false;
     private BluetoothManagerCallback activityCallback;
 
     public BluetoothManager(android.bluetooth.BluetoothManager manager, BluetoothManagerCallback activityCallback) {
         bluetoothAdapter = manager.getAdapter();
         exporter = new DataExportManager();
+        connectionState = BluetoothGatt.STATE_DISCONNECTED;
         this.activityCallback = activityCallback;
     }
 
@@ -69,28 +70,33 @@ public class BluetoothManager {
         return true;
     }
 
-    public void connectToDevice(final Context context, String macAddress) {
+    public boolean connectToDevice(final Context context, String macAddress) {
         BluetoothDevice device = bluetoothAdapter.getRemoteDevice(macAddress);
-        deviceGatt = device.connectGatt(context, true, new BluetoothGattCallback() {
+        deviceGatt = device.connectGatt(context, false, new BluetoothGattCallback() {
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                gatt.discoverServices();
+                if(status == BluetoothGatt.GATT_SUCCESS) {
+                    gatt.discoverServices();
+                    connectionState = newState;
+                    activityCallback.onConnectionStateChange(newState);
 
-                if(status != BluetoothGatt.GATT_SUCCESS)
+                    if(!scanningStarted && newState == BluetoothGatt.STATE_DISCONNECTED)
+                        deviceGatt.close();
+                } else {
                     activityCallback.onErrorOccured();
+                }
             }
 
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                //Umoznit start scan
+                if(status == BluetoothGatt.GATT_SUCCESS) {
+                    if(scanningStarted)
+                        readDataFromSensorTag();
 
-                if(scanningStart)
-                    readDataFromSensorTag();
-                else
                     activityCallback.onServiceDiscovered();
-
-                if(status != BluetoothGatt.GATT_SUCCESS)
+                } else {
                     activityCallback.onErrorOccured();
+                }
             }
 
 
@@ -104,7 +110,7 @@ public class BluetoothManager {
                             scan = new Scan();
                             deviceGatt.disconnect();
                             activityCallback.onScanningStarted();
-                            scanningStart = true;
+                            scanningStarted = true;
                             int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             scan.setScanDuration(scanDuration);
                             System.out.println("SCAN DURATION onWrite: " + scanDuration);
@@ -117,7 +123,6 @@ public class BluetoothManager {
                                     System.out.println("SKEN SKONČIL");
                                     activityCallback.onScanningEnded();
                                     deviceGatt.connect();
-                                    //readDataFromSensorTag();
                                 }
                             }, scanDuration + SCANNING_DURATION_DELAY);
                             break;
@@ -173,18 +178,18 @@ public class BluetoothManager {
 
 
         });
+
+        return deviceGatt.connect();
     }
 
     public void disconnect() {
         deviceGatt.disconnect();
-        deviceGatt.close();
 
         stopAllActivity();
     }
 
     private void stopAllActivity() {
-        scanningStart = false;
-        scanningTime.cancel();
+        scanningStarted = false;
         fifoOfChars.clear();
     }
 
@@ -198,7 +203,7 @@ public class BluetoothManager {
     }
 
     private void readDataFromSensorTag() {
-        scanningStart = false;
+        scanningStarted = false;
 
         activityCallback.onRadioPrintsRead();
         deviceGatt.readCharacteristic(getCharacteristic(BEACONS_LIST_AGE_OF_SCAN_UUID));
@@ -242,4 +247,11 @@ public class BluetoothManager {
         return null;
     }
 
+    public boolean isScanningStarted() {
+        return scanningStarted;
+    }
+
+    public int getConnectionState() {
+        return connectionState;
+    }
 }

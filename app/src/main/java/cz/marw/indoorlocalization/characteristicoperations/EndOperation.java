@@ -1,6 +1,7 @@
 package cz.marw.indoorlocalization.characteristicoperations;
 
 import android.bluetooth.BluetoothGatt;
+import android.os.Build;
 
 import java.io.File;
 
@@ -26,6 +27,10 @@ public class EndOperation implements CharacteristicOperation {
 
     @Override
     public boolean execute(BluetoothGatt gatt) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            gatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER);
+        }
+
         File file = exporter.exportData(scan);
         cb.onRadioPrintsExported(file);
         return true;

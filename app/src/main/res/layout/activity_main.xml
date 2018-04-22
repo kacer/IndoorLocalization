@@ -26,16 +26,42 @@
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="20sp">
+
+                <TextView
+                    android:text="Sensor Tag is "
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/textView"
+                    android:textSize="20sp"
+                    android:textAlignment="textStart"
+                    android:textColor="@android:color/black" />
+
+                <TextView
+                    android:text="disconnected"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tvConnectionState"
+                    android:layout_weight="1"
+                    android:textSize="20sp"
+                    android:textColor="@android:color/holo_red_light"
+                    android:textAlignment="textStart" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
                 <EditText
-                    android:layout_width="183dp"
                     android:layout_height="wrap_content"
                     android:inputType="textPersonName"
                     android:ems="10"
                     android:id="@+id/etMacAddr"
                     android:layout_alignParentTop="true"
-                    android:layout_alignParentStart="true" />
+                    android:layout_alignParentStart="true"
+                    android:layout_width="165dp" />
 
                 <TextView
                     android:text="MAC"
@@ -48,35 +74,37 @@
                     android:text="Connect"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentEnd="true"
-                    android:id="@+id/btnConnect" />
+                    android:id="@+id/btnConnect"
+                    android:width="120dip" />
             </LinearLayout>
 
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:id="@+id/llStartScan"
+                android:visibility="invisible">
 
                 <EditText
-                    android:layout_width="84dp"
                     android:layout_height="wrap_content"
                     android:inputType="number"
                     android:ems="10"
-                    android:id="@+id/etScanDuration" />
+                    android:id="@+id/etScanDuration"
+                    android:layout_width="70dp" />
 
                 <TextView
                     android:text="Scan duration in ms"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/tvScanDuration"
-                    android:layout_weight="1" />
+                    android:layout_weight="0.78" />
 
                 <Button
                     android:text="Scan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/btnScan" />
+                    android:id="@+id/btnScan"
+                    android:width="120dip" />
 
             </LinearLayout>
 

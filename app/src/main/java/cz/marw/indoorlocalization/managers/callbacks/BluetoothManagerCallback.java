@@ -8,6 +8,8 @@ import java.io.File;
 
 public interface BluetoothManagerCallback {
 
+    public void onConnectionStateChange(int newState);
+
     public void onServiceDiscovered();
 
     public void onScanningStarted();
