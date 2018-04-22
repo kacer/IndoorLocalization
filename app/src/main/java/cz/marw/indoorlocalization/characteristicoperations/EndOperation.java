@@ -10,7 +10,7 @@ import cz.marw.indoorlocalization.managers.DataExportManager;
 import cz.marw.indoorlocalization.model.Scan;
 
 /**
- * Created by Martinek on 27. 3. 2018.
+ * Created by Martin Donát on 27. 3. 2018.
  */
 
 public class EndOperation implements CharacteristicOperation {

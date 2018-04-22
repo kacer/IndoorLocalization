@@ -3,7 +3,7 @@ package cz.marw.indoorlocalization.managers.callbacks;
 import java.io.File;
 
 /**
- * Created by Martinek on 6. 4. 2018.
+ * Created by Martin Donát on 6. 4. 2018.
  */
 
 public interface BluetoothManagerCallback {

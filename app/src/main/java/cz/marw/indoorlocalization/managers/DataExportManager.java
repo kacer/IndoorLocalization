@@ -16,7 +16,7 @@ import cz.marw.indoorlocalization.model.RadioPrint;
 import cz.marw.indoorlocalization.model.Scan;
 
 /**
- * Created by Martinek on 27. 3. 2018.
+ * Created by Martin Donát on 27. 3. 2018.
  */
 
 public class DataExportManager {
@@ -82,7 +82,7 @@ public class DataExportManager {
     }
 
     private String getFilename() {
-        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy HH-mm-ss");
         String date = df.format(new Date());
 
         return "Scanning " + date + ".json";

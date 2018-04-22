@@ -30,6 +30,10 @@ import cz.marw.indoorlocalization.R;
 import cz.marw.indoorlocalization.managers.callbacks.BluetoothManagerCallback;
 import cz.marw.indoorlocalization.managers.BluetoothManager;
 
+/*
+* Created by Martin Donát
+* */
+
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUESTCODE_STORAGE_PERMISSION = 1;
@@ -114,11 +118,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRadioPrintsExported(File file) {
                 if(file.exists()) {
+                    //If radio prints were exported into file then we need to invoke media scanner for this file
+                    //This will ensure that every new file will be immediately accessible from PC
                     Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     Uri contentUri = Uri.fromFile(file);
                     mediaScanIntent.setData(contentUri);
                     sendBroadcast(mediaScanIntent);
+
                     setTextToComponent(tvLoadingState, getString(R.string.info_data_exported));
+
                     loadingScreenFadeOut.schedule(new TimerTask() {
                         @Override
                         public void run() {
@@ -148,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
             case REQUESTCODE_ENABLE_BT:
                 if(resultCode == RESULT_OK)

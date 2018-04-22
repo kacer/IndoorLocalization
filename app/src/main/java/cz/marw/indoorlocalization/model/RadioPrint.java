@@ -1,7 +1,7 @@
 package cz.marw.indoorlocalization.model;
 
 /**
- * Created by Martinek on 13. 3. 2018.
+ * Created by Martin Donát on 13. 3. 2018.
  */
 
 public class RadioPrint {

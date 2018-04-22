@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by Martinek on 13. 3. 2018.
+ * Created by Martin Donát on 13. 3. 2018.
  */
 
 public class Scan {

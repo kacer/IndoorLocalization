@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 /**
- * Created by Martinek on 27. 3. 2018.
+ * Created by Martin Donát on 27. 3. 2018.
  */
 
 public class ReadOperation implements CharacteristicOperation {

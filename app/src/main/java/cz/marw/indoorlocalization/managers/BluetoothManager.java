@@ -24,7 +24,7 @@ import cz.marw.indoorlocalization.model.Scan;
 import cz.marw.indoorlocalization.tools.MacAddress;
 
 /**
- * Created by Martinek on 13. 3. 2018.
+ * Created by Martin Donát on 13. 3. 2018.
  */
 
 public class BluetoothManager {
@@ -90,6 +90,8 @@ public class BluetoothManager {
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
                 if(status == BluetoothGatt.GATT_SUCCESS) {
+                    //When smartphone reconnected to Sensor Tag after scanning was completed
+                    //then smartphone will start to read data from Sensor Tag
                     if(scanningStarted)
                         readDataFromSensorTag();
 
@@ -99,14 +101,12 @@ public class BluetoothManager {
                 }
             }
 
-
-
-
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
                 if(status == BluetoothGatt.GATT_SUCCESS) {
                     switch(characteristic.getUuid().toString()) {
                         case START_SCAN_CHAR_UUID:
+                            //Sensor Tag started scanning
                             scan = new Scan();
                             deviceGatt.disconnect();
                             activityCallback.onScanningStarted();
@@ -114,6 +114,7 @@ public class BluetoothManager {
                             int scanDuration = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             scan.setScanDuration(scanDuration);
                             System.out.println("SCAN DURATION onWrite: " + scanDuration);
+                            //When scanning ends, smartphone will reconnect
                             scanningTime.schedule(new TimerTask() {
                                 @Override
                                 public void run() {
@@ -127,6 +128,7 @@ public class BluetoothManager {
                             }, scanDuration + SCANNING_DURATION_DELAY);
                             break;
                         case BEACONS_LIST_GET_RECORD_UUID:
+                            //Index was written successfully so we fetch next characteristic operation
                             fetchNextCharacteristic();
                             break;
                     }
@@ -142,6 +144,7 @@ public class BluetoothManager {
                         case BEACONS_LIST_TOTAL_COUNT_UUID:
                             int totalCount = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                             System.out.println("Total count: " + totalCount);
+                            //Now is possible to start reading radio prints from Sensor Tag
                             readRadioPrintsFromSensorTag(totalCount);
                             break;
                         case BEACONS_LIST_MAC_ADDR_UUID:
@@ -173,6 +176,7 @@ public class BluetoothManager {
                     activityCallback.onErrorOccured();
                 }
 
+                //After every read or write operation is needed to fetch next characteristic operation
                 fetchNextCharacteristic();
             }
 
@@ -202,6 +206,9 @@ public class BluetoothManager {
         return new WriteOperation(startScanCharacteristic, scanDuration).execute(deviceGatt);
     }
 
+    /**
+     *  This function reads necessary data from Sensor Tag before radio prints are read.
+     */
     private void readDataFromSensorTag() {
         scanningStarted = false;
 
@@ -212,6 +219,11 @@ public class BluetoothManager {
         fifoOfChars.add(new ReadOperation(getCharacteristic(BEACONS_LIST_FLAG_OF_MAC_UUID)));
     }
 
+    /**
+    *   Function is responsible for fetching next read or write operation from FIFO queue,
+    *   this is needed  because R/W operations trough bluetooth are asynchronous. This function
+    *   must be called after every R/W operation.
+    * */
     private void fetchNextCharacteristic() {
         if(fifoOfChars.isEmpty())
             return;
@@ -221,6 +233,10 @@ public class BluetoothManager {
         nextChar.execute(deviceGatt);
     }
 
+    /**
+     *  Function fills the FIFO queue with R/W operations for reading all radio prints which were caught.
+     * @param totalCount
+     */
     private void readRadioPrintsFromSensorTag(int totalCount) {
         for(int i = 0; i < totalCount; i++) {
             BluetoothGattCharacteristic getRecordChar = getCharacteristic(BEACONS_LIST_GET_RECORD_UUID);
