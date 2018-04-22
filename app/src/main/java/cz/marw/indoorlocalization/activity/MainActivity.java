@@ -32,6 +32,7 @@ import cz.marw.indoorlocalization.managers.BluetoothManager;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUESTCODE_STORAGE_PERMISSION = 1;
+    private static final int REQUESTCODE_ENABLE_BT = 2;
 
     private static final int LOADING_SCREEN_FADE_OUT_DURATION = 2000;
 
@@ -145,6 +146,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case REQUESTCODE_ENABLE_BT:
+                if(resultCode == RESULT_OK)
+                    handleConnectButton();
+                break;
+        }
+        if(requestCode == REQUESTCODE_ENABLE_BT)
+            System.out.println(resultCode);
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
@@ -221,6 +235,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void handleConnectButton() {
+        if(bluetoothManager.getConnectionState() == BluetoothGatt.STATE_CONNECTED) {
+            btnConnect.setClickable(false);
+            bluetoothManager.disconnect();
+        } else
+            connect();
+    }
+
     private void setVisibilityToComponent(final View comp, final int visibility) {
         runOnUiThread(new Runnable() {
             @Override
@@ -268,11 +290,14 @@ public class MainActivity extends AppCompatActivity {
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(bluetoothManager.getConnectionState() == BluetoothGatt.STATE_CONNECTED) {
-                    btnConnect.setClickable(false);
-                    bluetoothManager.disconnect();
-                } else
-                    connect();
+                if(!bluetoothManager.isBluetoothActive()) {
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableBtIntent, REQUESTCODE_ENABLE_BT);
+
+                    return;
+                }
+
+                handleConnectButton();
             }
         });
 
