@@ -4,6 +4,7 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothGatt;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -11,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -47,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout loadingScreen;
     private TextView tvLoadingState, tvConnectionState;
 
-    private Timer loadingScreenFadeOut;
+    private AlertDialog errorHasOccuredDialog;
 
     private BluetoothManager bluetoothManager;
 
@@ -64,9 +66,9 @@ public class MainActivity extends AppCompatActivity {
         tvLoadingState = (TextView) findViewById(R.id.tvLoadingState);
         tvConnectionState = (TextView) findViewById(R.id.tvConnectionState);
 
-        loadingScreenFadeOut = new Timer();
-
         etMacAddr.setText(BluetoothManager.SENSOR_TAG_MAC);
+
+        prepareAlertDiolog();
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 
@@ -82,15 +84,7 @@ public class MainActivity extends AppCompatActivity {
                     setTextColorToComponent(tvConnectionState, getColorFromRes(R.color.colorGreen));
                     setTextToComponent(tvConnectionState, getString(R.string.conn_state_connected));
                 } else {
-                    setEnabledToComponent(etMacAddr, true);
-
-                    btnConnect.setClickable(true);
-                    setTextToComponent(btnConnect, getString(R.string.btn_connect));
-
-                    setTextColorToComponent(tvConnectionState, getColorFromRes(android.R.color.holo_red_light));
-                    setTextToComponent(tvConnectionState, getString(R.string.conn_state_disconnected));
-
-                    setVisibilityToComponent(llStartScan, View.INVISIBLE);
+                    setGuiToDefault();
                 }
             }
 
@@ -127,22 +121,42 @@ public class MainActivity extends AppCompatActivity {
 
                     setTextToComponent(tvLoadingState, getString(R.string.info_data_exported));
 
+                    Timer loadingScreenFadeOut = new Timer();
                     loadingScreenFadeOut.schedule(new TimerTask() {
                         @Override
                         public void run() {
-                            setVisibilityToComponent(loadingScreen, View.GONE);
+                        setVisibilityToComponent(loadingScreen, View.GONE);
                         }
                     }, LOADING_SCREEN_FADE_OUT_DURATION);
-                    btnScan.setClickable(true);
+
                 } else {
                     setVisibilityToComponent(loadingScreen, View.GONE);
                     Toast.makeText(MainActivity.this, getString(R.string.error_scan_was_not_exported), Toast.LENGTH_LONG).show();
                 }
+                setVisibilityToComponent(btnConnect, View.VISIBLE);
+                btnScan.setClickable(true);
             }
 
             @Override
             public void onErrorOccured() {
+                setTextToComponent(tvLoadingState, getString(R.string.error_occurred));
+                Timer fadeOut = new Timer();
+                fadeOut.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        setGuiToDefault();
+                        setVisibilityToComponent(loadingScreen, View.GONE);
+                        setVisibilityToComponent(btnConnect, View.VISIBLE);
+                        btnScan.setClickable(true);
 
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                errorHasOccuredDialog.show();
+                            }
+                        });
+                    }
+                }, LOADING_SCREEN_FADE_OUT_DURATION);
             }
         });
 
@@ -228,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         btnScan.setClickable(false);
+        setVisibilityToComponent(btnConnect, View.INVISIBLE);
 
         bluetoothManager.startScan(scanDuration);
     }
@@ -256,6 +271,32 @@ public class MainActivity extends AppCompatActivity {
             bluetoothManager.disconnect();
         } else
             connect();
+    }
+
+    private void prepareAlertDiolog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(getString(R.string.error_occurred));
+        builder.setMessage(getString(R.string.alert_dialog_message));
+        builder.setPositiveButton(getString(R.string.button_ok), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i) {
+                dialog.dismiss();
+            }
+        });
+
+        errorHasOccuredDialog = builder.create();
+    }
+
+    private void setGuiToDefault() {
+        setEnabledToComponent(etMacAddr, true);
+
+        btnConnect.setClickable(true);
+        setTextToComponent(btnConnect, getString(R.string.btn_connect));
+
+        setTextColorToComponent(tvConnectionState, getColorFromRes(android.R.color.holo_red_light));
+        setTextToComponent(tvConnectionState, getString(R.string.conn_state_disconnected));
+
+        setVisibilityToComponent(llStartScan, View.INVISIBLE);
     }
 
     private void setVisibilityToComponent(final View comp, final int visibility) {

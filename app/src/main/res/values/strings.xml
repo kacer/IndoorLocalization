@@ -1,9 +1,10 @@
 <resources>
-    <string name="app_name">IndoorLocalization</string>
+    <string name="app_name">Sensor Tag remote</string>
     <string name="error_invalid_mac">Invalid MAC address!</string>
     <string name="error_parse_scan_duration">If you want to start scanning you have to set scan duration greater than 0!</string>
     <string name="error_set_permission_to_storage">If you want to start scanning you have to allow permission to storage!</string>
-    <string name="error_scan_was_not_exported">Actual scan results wasn\'t exported!</string>
+    <string name="error_scan_was_not_exported">Actual scan results weren\'t exported!</string>
+    <string name="error_occurred">Error has occurred</string>
     <string name="info_scanning_started">Sensor Tag is scanning</string>
     <string name="info_scanning_stopped">Sensor Tag has stopped the scanning</string>
     <string name="info_reading_data">Reading data from Sensor Tag</string>
@@ -13,4 +14,6 @@
     <string name="conn_state_disconnected">disconnected</string>
     <string name="conn_state_connected">connected</string>
     <string name="conn_state_connecting">connecting</string>
+    <string name="alert_dialog_message">Any error has occurred. Check Sensor Tag whether it is online. If problems persist try restarting application and Sensor Tag.</string>
+    <string name="button_ok">Ok</string>
 </resources>
